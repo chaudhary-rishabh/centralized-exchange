@@ -11,17 +11,20 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@perps/db": "workspace:*",
+    "@perps/schema": "workspace:*",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-rate-limit": "^8.5.2",
     "jsonwebtoken": "^9.0.3",
-    "@perps/db": "workspace:*"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22.15.3",
     "tsx": "^4.22.3"
   }

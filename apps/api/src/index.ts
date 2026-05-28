@@ -6,14 +6,14 @@ const app = express();
 const PORT = process.env.PORT ?? 5000;
 
 
-app.use("/health", (req: Request, res: Response) => {
+app.get("/health", (req: Request, res: Response) => {
     res.status(200).json({
         status: true,
         messaeg: "server is up and running!"
     })
 })
 
-app.use("/health/db", async(req: Request, res: Response) => {
+app.get("/health/db", async(req: Request, res: Response) => {
     try {
         const response = await prisma.market.findFirst();
         if (!response) {
