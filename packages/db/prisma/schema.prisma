@@ -3,8 +3,9 @@
 
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
+
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../src/generated/prisma"
 }
 
@@ -12,66 +13,110 @@ datasource db {
   provider = "postgresql"
 }
 
-model User {
-  id  Int @id @default(autoincrement())
-  username String
-  email String @unique
-  isadmin Boolean @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt()
-}
-
-model Market {
-  id Int @id
-  slug String
-  imageurl String
-}
-
-model Order {
-  id Int @id
-  price String
-  maker_id String
-  taker_id String
-  market_id String
-  user_id Int
-  ordertype OrderType
-  qty String
-  slippage Int
-  filledqty String
-  initialMargin String
-  status Status
-  side Side
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt()
-
-}
-
-model Fill {
-  id Int @id
-  maker_id String
-  taker_id String
-  qty String
-  price String
-  maker_order_id String
-  taker_order_id String
-  market_id String
-  createdAt DateTime @default(now())
-}
 
 enum Side {
   Bid
   Ask
 }
 
-enum Status {
-  Pending
-  Filled
-  PartiallyFilled
-  Cancelled
+enum OrderStatus {
   Open
+  PartiallyFilled
+  Filled
+  Cancelled
 }
 
 enum OrderType {
   Market
   Limit
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  email     String   @unique
+  isAdmin   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders     Order[]
+  makerFills Fill[]  @relation("MakerUser")
+  takerFills Fill[]  @relation("TakerUser")
+
+  @@index([email])
+  @@map("users")
+}
+
+model Market {
+  id        Int      @id @default(autoincrement())
+  slug      String   @unique
+  imageUrl  String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders Order[]
+  fills  Fill[]
+
+  @@index([slug])
+  @@map("markets")
+}
+
+model Order {
+  id            Int         @id @default(autoincrement())
+  userId        Int
+  marketId      Int
+  side          Side
+  orderType     OrderType
+  status        OrderStatus @default(Open)
+
+  price         Decimal?     @db.Decimal(20, 8) // market order null so add ?
+  qty           Decimal     @db.Decimal(20, 8)
+  filledQty     Decimal     @db.Decimal(20, 8)  @default(0)
+  initialMargin Decimal     @db.Decimal(20, 8)
+  slippage      Decimal     @db.Decimal(5, 4)   @default(0)  
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User   @relation(fields: [userId],   references: [id])
+  market Market @relation(fields: [marketId], references: [id])
+
+  makerFills Fill[] @relation("MakerOrder")
+  takerFills Fill[] @relation("TakerOrder")
+
+  @@index([marketId, status, side])          // fetch open bids/asks per market
+  @@index([userId, status])                  // user's active orders
+  @@index([marketId, price, side, status])   // price-level matching
+  @@index([createdAt])
+  @@map("orders")
+}
+
+model Fill {
+  id           Int     @id @default(autoincrement())
+  marketId     Int
+  makerOrderId Int
+  takerOrderId Int
+  makerId      Int
+  takerId      Int
+
+  qty          Decimal @db.Decimal(20, 8)
+  price        Decimal @db.Decimal(20, 8)
+  makerFee     Decimal @db.Decimal(20, 8) @default(0)
+  takerFee     Decimal @db.Decimal(20, 8) @default(0)
+
+  createdAt DateTime @default(now())
+
+  market     Market @relation(fields: [marketId],     references: [id])
+  makerOrder Order  @relation("MakerOrder", fields: [makerOrderId], references: [id])
+  takerOrder Order  @relation("TakerOrder", fields: [takerOrderId], references: [id])
+  maker      User   @relation("MakerUser",  fields: [makerId],      references: [id])
+  taker      User   @relation("TakerUser",  fields: [takerId],      references: [id])
+
+  @@index([marketId, createdAt])
+  @@index([makerId])
+  @@index([takerId])
+  @@index([makerOrderId])
+  @@index([takerOrderId])
+  @@map("fills")
 }
