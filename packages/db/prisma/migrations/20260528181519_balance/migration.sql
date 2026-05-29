@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "users" ADD COLUMN     "balance" DECIMAL(20,8) NOT NULL DEFAULT 0,
+ADD COLUMN     "lockedBalance" DECIMAL(20,8) NOT NULL DEFAULT 0,
+ALTER COLUMN "isAdmin" DROP NOT NULL;

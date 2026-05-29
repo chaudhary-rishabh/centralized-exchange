@@ -39,6 +39,8 @@ model User {
   isAdmin   Boolean?  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  balance       Decimal @db.Decimal(20, 8) @default(0)
+  lockedBalance Decimal @db.Decimal(20, 8) @default(0)
 
   orders     Order[]
   makerFills Fill[]  @relation("MakerUser")
@@ -47,7 +49,6 @@ model User {
   @@index([email])
   @@map("users")
 }
-
 model Market {
   id        Int      @id @default(autoincrement())
   slug      String   @unique

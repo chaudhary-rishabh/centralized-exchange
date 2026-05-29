@@ -12,7 +12,7 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
             })
         }
 
-        const decoded = jwt.verify(
+        const decoded = jwt.verify( //this will throw error if no like not verified jwt so no need of !decoded then res.error.
             token,
             process.env.JWT_SECRET!
         ) as { userId: number };
